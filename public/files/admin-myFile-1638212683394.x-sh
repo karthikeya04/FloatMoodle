@@ -1,0 +1,3 @@
+#!bin/bash
+docker start 251ubuntu
+docker exec -it 251ubuntu /bin/bash

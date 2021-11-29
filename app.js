@@ -100,8 +100,6 @@ var transporter = nodemailer.createTransport({
   }
 });
 
-
-
 //Rauthentication
 app.get("/home", (req, res) => {
   res.render("home");
@@ -649,6 +647,7 @@ app.post("/instructor/courses/:courseName/createAssignment", upload.single("myFi
       }
       students.forEach(id=>{
         User.findById(id,(err,user)=>{
+          var email = user.email
           var scourses=user.SCourses;
           var ind=0,count=0;
           scourses.forEach(obj=>{
@@ -675,6 +674,22 @@ app.post("/instructor/courses/:courseName/createAssignment", upload.single("myFi
               res.redirect("/instructor/courses/" + req.params.courseName);
             }
           })
+          
+          //Email notification regarding new assignment
+          var mailOptions = {
+            from: 'FMoodletest1@gmail.com',
+            to: email,
+            subject: req.params.courseName + ': new assignment',
+            text: 'A new assignment has been posted: '+req.body.nameofA
+          };
+          
+          transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('Email sent: ' + info.response);
+            }
+          });
         })
       })
     })
@@ -1130,7 +1145,7 @@ app.get("/:courseName/enroll",(req,res)=>{
 app.post("/:courseName/mail",(req,res)=>{
   var obj=req.body;
   var data=Object.entries(obj);
-  //console.log(data);
+  console.log(data);
   data.forEach(x=>{
     var email=x[0];
     var role=x[1];
@@ -1145,6 +1160,11 @@ app.post("/:courseName/mail",(req,res)=>{
       else if(role=="instructor"){
         code=course.i_code;
       }
+      else{
+        code=-1;
+      }
+      //console.log(code+','+role);
+      if(code!=-1){
       var mailOptions = {
         from: 'FMoodletest1@gmail.com',
         to: email,
@@ -1159,6 +1179,7 @@ app.post("/:courseName/mail",(req,res)=>{
           console.log('Email sent: ' + info.response);
         }
       });
+    }
     })
   })
   res.redirect("/"+req.params.courseName+"/eParticipants");
@@ -1202,6 +1223,22 @@ app.post("/student/courses/:courseName/assignments/:assName", upload.single("myF
     })
     var q = User.findById(req.user._id);
     q.exec(async(err, user) => {
+      var email = user.email;
+      //Email notification regarding assignment submission
+      var mailOptions = {
+        from: 'FMoodletest1@gmail.com',
+        to: email,
+        subject: 'Assignment submitted',
+        text: 'Assignment: '+ req.params.assName + ' of course: ' + req.params.courseName + ' has been submitted' 
+      };
+      
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
       var subs = [];
       subs = user.submissions;
       subs.push(newSub._id);

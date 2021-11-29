@@ -1,0 +1,24 @@
+A = readmatrix('B_A_A.csv');
+B = readmatrix('B_A_B.csv');
+C = readmatrix('B_A_C.csv');
+inda = ~isnan(A);
+A = A(inda);
+indb = ~isnan(B);
+B = B(indb);
+indc = ~isnan(C);
+C = C(indc);
+clear('inda');
+clear('indb');
+clear('indc');
+x = 1:length(A);
+y = x.*log(x);
+y = y./64000;
+plot(x,A,'b','DisplayName','insertion-time in nanoseconds for input-a');
+hold on
+plot(x,B,'r','DisplayName','insertion-time in nanoseconds for input-b');
+hold on
+plot(x,C,'g','DisplayName','insertion-time in nanoseconds for input-c');
+hold on
+plot(x,y,'k','LineWidth',2,'DisplayName','nlogn scaled down by 64000');
+xlabel('n');
+legend('Location','SouthEast');

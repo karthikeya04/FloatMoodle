@@ -1,0 +1,106 @@
+#include<iostream>
+#include<string>
+#include<vector>
+#include<algorithm>
+#include<deque>
+#include<queue>
+#include<ctime>
+using namespace std;
+
+enum EventType {PacketTransmit, PacketRecieve, SimulationEnd};
+
+struct Event{
+    public:
+    double time;
+    int node;
+    int bytes;
+    EventType metaData;
+    bool *errorFree;
+};
+
+class Compare{
+    public:
+    bool operator() (Event x,Event y){
+        if(x.time>y.time) return true;
+        else return false;
+    }
+};
+
+class modifiedQueue{
+    vector<Event> onAir;
+    public:
+    void insert(Event x){
+        onAir.push_back(x);
+        push_heap(onAir.begin(),onAir.end(),Compare());
+        if(onAir.size()>1){
+            for(int i=0;i<onAir.size();i++){
+                *(onAir[i].errorFree) = false;
+            }
+        }
+    }
+    void remove(){
+        pop_heap(onAir.begin(),onAir.end(),Compare()); 
+        onAir.pop_back();
+    }
+};
+
+int main(int argc,char *argv[]){
+    srand(time(0));
+    int N = stoi(argv[1]);
+    int T = stoi(argv[2]);
+    
+    priority_queue<Event, vector<Event>, Compare > network;
+    modifiedQueue onAir;
+
+    for(int i=0;i<N;i++){ //inserting transmission events from t=0 to t=T/100
+        Event x;
+        x.time = (T/100.0)*((1+rand()%N)/(double)N);
+        x.node=i+1;
+        x.bytes = 50+rand()%951;
+        x.metaData = PacketTransmit;
+        network.push(x);
+    }
+
+    Event w;
+    w.metaData = SimulationEnd;
+    w.time = T;
+    network.push(w);//Inserting simulation end event
+
+    while(true){
+        Event e = network.top();
+        network.pop();
+        if(e.metaData==PacketTransmit){
+            Event x;
+            int randomnode = 1 + rand()%(N-1);
+            if(randomnode<e.node){
+              x.node = randomnode;
+            }
+            else{
+              x.node = randomnode+1;
+            }
+            x.time = e.time + e.bytes/1000.0;
+            x.metaData = PacketRecieve;
+            x.bytes = e.bytes;
+            x.errorFree = new bool[1];
+            *(x.errorFree)=1;
+            network.push(x);
+            onAir.insert(x);
+            cout<<"Transmitting packet of "<<x.bytes<<" bytes"<<" from Node:"<<e.node<<" to Node:"<<x.node<<" at time t="<<e.time<<"\n";
+        }
+        else if(e.metaData==PacketRecieve){
+            onAir.remove();
+            string z;
+            if(*(e.errorFree)){
+                z=" without any error";
+            }
+            else{
+                z=" with an error!";
+            }
+            cout<<"Recieved transmission at Node:"<<e.node<<z<<" at time t="<<e.time<<"\n";
+        }
+        else{//Simulation End
+            cout<<"End of Simulation at time t="<<e.time<<"\n:)\n";
+            break;
+        }
+    }
+}

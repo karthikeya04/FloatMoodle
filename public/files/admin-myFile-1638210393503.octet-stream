@@ -1,0 +1,145 @@
+#include<iostream>
+#include<utility>
+#include<ctime>
+#include<algorithm>
+#include<chrono>
+#include<fstream>
+using namespace std;
+using namespace std::chrono;
+
+long long int comparisions = 0;
+long long int swaps = 0;
+
+int* randomarray(int mode,int l){
+    if(mode == 1){
+        int length = l;
+        cout<<"generated random array's length is "<<length<<"\n";
+        int *arr = new int[length];
+        for(int i=0;i<length;i++){
+            arr[i] = rand();
+        }
+        return arr;
+    }
+    else if(mode == 2){
+        int *arr = randomarray(1,l);
+        sort(arr,arr+l);
+        int q = l/20; //int division
+        for(int i=0;i<q;i++){
+            swap(arr[i],arr[l-1-i]);
+        }
+        return arr;
+    }
+    else if(mode == 3){
+        int *arr = randomarray(1,l);
+        sort(arr,arr+l,greater<int>());
+        int q = l/20; //int division
+        for(int i=0;i<q;i++){
+            swap(arr[i],arr[l-1-i]);
+        }
+        return arr;
+    }
+    else return nullptr;
+}
+
+int partition(int arr[],int p,int q){
+    int pivotindex = p;
+    int pivot = arr[pivotindex];
+    int x = q;
+    for(int i=p;i<=q;i++){
+        if(i<=x){
+            if(arr[i]>pivot){ 
+                swap(arr[i],arr[x]);
+                if(i==pivotindex) pivotindex = x;
+                if(x==pivotindex) pivotindex = i;
+                i--; x--;
+                swaps++; comparisions++;
+            }
+        }
+        else break;
+    }
+    swap(arr[x],arr[pivotindex]);
+    swaps++;
+    return x;
+}
+
+void quicksort(int arr[],int p,int q){
+    if(p<q){
+        int x = partition(arr,p,q);
+        quicksort(arr,p,x-1);
+        quicksort(arr,x+1,q);
+    }
+}
+
+int main(){
+    srand(time(NULL));
+    double time[3][1000]={0};
+    int swp[3][1000]={0};
+    int cmp[3][1000]={0};
+    for(int i=1;i<=1000;i++){
+        for(int k=1;k<=3;k++){
+            for(int j=0;j<10;j++){
+                int *x = randomarray(k,i);
+                int y1=swaps;
+                int z1=comparisions;
+                auto begin = steady_clock::now();
+                quicksort(x,0,i-1);
+                auto end = steady_clock::now();
+                int y2=swaps;
+                int z2=comparisions;
+                std::chrono::duration<double, std::milli> duration = end - begin;
+                time[k-1][i-1]+=duration.count();
+                swp[k-1][i-1]+=(y2-y1);
+                cmp[k-1][i-1]+=(z2-z1);
+            }
+            time[k-1][i-1] /= 10;
+            swp[k-1][i-1]/=10;
+            cmp[k-1][i-1]/=10;
+        }
+    }
+    ofstream outfile;
+    outfile.open("A_A_A.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<time[0][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_A_B.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<time[1][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_A_C.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<time[2][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_B_A.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<swp[0][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_B_B.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<swp[1][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_B_C.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<swp[2][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_C_A.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<cmp[0][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_C_B.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<cmp[1][i]<<",";
+    }
+    outfile.close();
+    outfile.open("A_C_C.csv");
+    for(int i=0;i<1000;i++){
+        outfile<<cmp[2][i]<<",";
+    }
+    outfile.close();
+}
